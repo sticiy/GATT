@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Prinsip Kerja GATT (Gate Assisted Turn-off Thyristor)</title>
+<style>
+:root{--bg:#f4f6f9;--fg:#18202b;--mut:#566170;--card:#fff;--bd:#cfd6df;--pl:#dfe5ee;--nl:#fff;--on:#1b9a55;--off:#d4781f;--yel:#b98a00;--blue:#2457c5;--wire:#3b4654;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12161c;--fg:#e8edf4;--mut:#9aa6b6;--card:#1a2029;--bd:#303a48;--pl:#2b3544;--nl:#1a2029;--on:#3ccf82;--off:#f0963f;--yel:#e3b92e;--blue:#7ea4ff;--wire:#aab5c4}}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 "Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif}
+main{max-width:1060px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:1.6rem;margin:0 0 4px;letter-spacing:-.01em}
+.sub{color:var(--mut);margin:0 0 18px;max-width:70ch}
+.tabs,.subs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+button{font:inherit;color:var(--fg);background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:8px 14px;cursor:pointer}
+button:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+button[aria-pressed=true]{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:600}
+.subs button{font-size:.9rem;padding:6px 11px;border-radius:999px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px}
+.card h2{font-size:1.15rem;margin:0 0 8px}
+svg{width:100%;height:auto;display:block}
+.t{fill:var(--fg);font-size:13px}.m{fill:var(--mut);font-size:12px}
+.lay{stroke:var(--wire);stroke-width:1.5}
+.w{stroke:var(--wire);stroke-width:2;fill:none}
+.flow{fill:none;stroke:var(--on);stroke-linecap:round;stroke-dasharray:3 13;animation:mv 1s linear infinite}
+.flow.r{animation-direction:reverse}
+@keyframes mv{to{stroke-dashoffset:-16}}
+.badge{display:inline-block;padding:3px 12px;border-radius:999px;font-weight:700;color:#fff;margin-bottom:8px}
+.badge.on{background:var(--on)}.badge.off{background:var(--off)}
+ul{margin:0 0 10px;padding-left:20px}li{margin-bottom:6px}
+.warn{border-left:4px solid var(--yel);padding:6px 10px;margin:8px 0;background:rgba(185,138,0,.12);border-radius:0 6px 6px 0;font-size:.93rem}
+.dot{transition:transform .6s ease}
+.leg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.85rem;color:var(--mut);margin-top:6px}
+.ia{font-weight:600;margin:6px 0 0}
+footer{margin-top:16px;color:var(--mut);font-size:.88rem}
+@media (prefers-reduced-motion:reduce){.flow{animation:none}.dot{transition:none}}
+</style>
+</head>
+<body>
+<main>
+<h1>Prinsip Kerja GATT dan Rangkaiannya</h1>
+<p class="sub">Gate Assisted Turn-off Thyristor (GATT): struktur P-N-P-N dengan tiga junction (J1, J2, J3). Pilih mode operasi untuk melihat panjar, aliran arus, dan posisi pada kurva I-V.</p>
+
+<div class="tabs" id="tabs" role="group" aria-label="Mode operasi"></div>
+<div class="subs" id="subs" role="group" aria-label="Metode pemicuan"></div>
+
+<div class="grid">
+  <section class="card">
+    <h2>Rangkaian dan struktur</h2>
+    <svg viewBox="0 0 470 330" role="img" aria-label="Rangkaian GATT dengan sumber, beban, dan gate">
+      <!-- struktur -->
+      <rect x="170" y="70" width="80" height="40" fill="var(--pl)" class="lay"/>
+      <rect x="170" y="110" width="80" height="40" fill="var(--nl)" class="lay"/>
+      <rect x="170" y="150" width="80" height="40" fill="var(--pl)" class="lay"/>
+      <rect x="170" y="190" width="80" height="40" fill="var(--nl)" class="lay"/>
+      <text class="t" x="206" y="95">P</text><text class="t" x="206" y="135">N</text><text class="t" x="206" y="175">P</text><text class="t" x="206" y="215">N</text>
+      <!-- kawat -->
+      <path class="w" d="M210 70V40H400V80M400 130V172M400 196V300H100M210 230V300M170 170H100V222M100 248V300"/>
+      <rect x="388" y="80" width="24" height="50" fill="var(--card)" stroke="var(--wire)" stroke-width="2"/>
+      <text class="m" x="418" y="110">Beban</text>
+      <text class="t" x="186" y="58">A</text><text class="t" x="186" y="250">K</text>
+      <text class="t" x="118" y="162">Gate (G)</text>
+      <!-- baterai utama -->
+      <line id="bm1" x1="385" x2="415" y1="172" y2="172" stroke="var(--wire)" stroke-width="3"/>
+      <line id="bm2" x1="392" x2="408" y1="196" y2="196" stroke="var(--wire)" stroke-width="3"/>
+      <text class="t" id="pm1" x="422" y="176" font-weight="700">+</text><text class="t" id="pm2" x="422" y="204" font-weight="700">−</text>
+      <!-- baterai gate -->
+      <g id="gbat">
+        <line id="bg1" x1="85" x2="115" y1="224" y2="224" stroke="var(--wire)" stroke-width="3"/>
+        <line id="bg2" x1="92" x2="108" y1="248" y2="248" stroke="var(--wire)" stroke-width="3"/>
+        <text class="t" id="pg1" x="62" y="230" font-weight="700">+</text><text class="t" id="pg2" x="62" y="254" font-weight="700">−</text>
+      </g>
+      <text class="m" id="gtxt" x="20" y="285"></text>
+      <!-- junction -->
+      <g font-size="12" font-weight="600">
+        <text id="j1" x="258" y="114"></text><text id="j2" x="258" y="154"></text><text id="j3" x="258" y="194"></text>
+      </g>
+      <g id="caps" visibility="hidden"><text class="m" x="128" y="114">C(A–G)</text><text class="m" x="128" y="198">C(G–K)</text></g>
+      <!-- aliran arus -->
+      <path id="fm" class="flow" d="M400 172V40H210V300H400V196"/>
+      <path id="fg" class="flow" d="M100 224V170H170"/>
+    </svg>
+    <p class="ia" id="ia"></p>
+  </section>
+
+  <section class="card">
+    <span class="badge off" id="badge">OFF</span>
+    <h2 id="title"></h2>
+    <ul id="pts"></ul>
+    <div class="warn" id="warn" hidden></div>
+  </section>
+
+  <section class="card" style="grid-column:1/-1">
+    <h2>Posisi pada kurva I-V</h2>
+    <svg viewBox="0 0 360 240" role="img" aria-label="Kurva karakteristik I-V dengan penanda posisi mode">
+      <rect x="20" y="150" width="130" height="80" fill="var(--off)" opacity=".16"/>
+      <rect x="150" y="128" width="185" height="22" fill="var(--yel)" opacity=".2"/>
+      <rect x="150" y="18" width="185" height="110" fill="var(--on)" opacity=".16"/>
+      <path class="w" d="M20 150H345M150 228V12" stroke-width="1.5"/>
+      <text class="m" x="326" y="168">V<tspan font-size="9" dy="3">AK</tspan></text><text class="m" x="156" y="16">I<tspan font-size="9" dy="3">AK</tspan></text>
+      <path d="M150 150L70 152Q58 154 56 205M150 150Q250 148 300 142" fill="none" stroke="var(--fg)" stroke-width="2.2"/>
+      <path d="M300 142L175 95" fill="none" stroke="var(--fg)" stroke-width="1.6" stroke-dasharray="5 4"/>
+      <path d="M175 95L170 24" fill="none" stroke="var(--fg)" stroke-width="2.2"/>
+      <text class="m" x="290" y="178">V<tspan font-size="9" dy="3">BO</tspan></text><text class="m" x="36" y="168">V<tspan font-size="9" dy="3">BR</tspan></text>
+      <text class="m" x="176" y="110">I<tspan font-size="9" dy="3">H</tspan></text>
+      <text class="m" x="26" y="222" fill="var(--off)">Reverse Blocking</text>
+      <text class="m" x="200" y="144">Forward Blocking</text>
+      <text class="m" x="230" y="60">Forward Conduction (ON)</text>
+      <g class="dot" id="dot" style="transform:translate(95px,151px)"><circle r="7" fill="var(--blue)" stroke="#fff" stroke-width="2"/></g>
+    </svg>
+    <div class="leg"><span>Oranye: reverse blocking (OFF)</span><span>Kuning: forward blocking (OFF)</span><span>Hijau: forward conduction (ON)</span></div>
+  </section>
+</div>
+
+<footer>Catatan: pada slide tertulis “Gale Assisted Turn-off Thyristor”; istilah yang umum dipakai adalah “Gate Assisted Turn-off Thyristor”. Nilai I<sub>H</sub> SCR biasanya 8–10 mA.</footer>
+</main>
+
+<script>
+const R="Reverse bias", F="Forward bias", X="Sekat hilang";
+const S=[
+{tab:0,name:"Reverse Blocking Mode",on:false,m:"-",g:0,J:[R,F,R],cur:"leak",rev:true,dot:[95,151],
+ ia:"I\u2090\u2096 \u2248 arus bocor balik (sangat kecil)",
+ pts:["Thyristor dipanjar mundur: <b>Anoda ke kutub negatif</b>, <b>Katoda ke kutub positif</b>.","Pada junction <b>J1 dan J3</b> terjadi panjar mundur, sehingga tidak terjadi konduksi.","Pada mode ini GATT berada dalam keadaan <b>OFF</b>.","Masih ada arus bocor balik dari Anoda ke Katoda, nilainya sangat kecil dan tidak berpengaruh terhadap beban."]},
+{tab:1,name:"Forward Blocking Mode",on:false,m:"+",g:0,J:[F,R,F],cur:"leak",dot:[250,146],
+ ia:"I\u2090\u2096 \u2248 arus bocor maju (kecil)",
+ pts:["<b>Anoda ke kutub positif</b>, <b>Katoda ke kutub negatif</b>.","Junction <b>J1 dan J3</b> mendapat forward bias, sedangkan <b>J2</b> reverse bias.","Arus dari Anoda ke Katoda masih ditahan oleh J2, sehingga hanya mengalir sedikit arus bocor maju.","GATT masih dalam kondisi <b>OFF</b>."]},
+{tab:2,sub:"Gate diberi panjar maju",name:"Forward Conduction Mode: Gate diberi panjar maju",on:true,m:"+",g:1,J:[F,X,F],cur:"on",dot:[172,60],
+ ia:"I\u2090\u2096 mengalir Anoda \u2192 Katoda; I\u0067 mengalir Gate \u2192 Katoda",
+ pts:["Syarat konduksi: panjar maju pada Anoda-Katoda, lalu GATT dipicu (gate, V<sub>AK</sub> &gt; V<sub>BO</sub>, atau dV/dt).","Saat dipanjar maju tanpa pemicu, GATT masih Forward Blocking.","Ketika <b>Gate diberi panjar maju</b>, mengalir arus dari Gate ke Katoda sehingga arus bocor Anoda-Katoda makin besar.","Hal ini memicu hilangnya sekat pada <b>junction J2</b>, arus dapat mengalir, dan GATT berubah ke kondisi <b>ON</b>.","GATT tetap ON walau gate dilepas, selama arus lebih besar dari Latching Current (I<sub>L</sub>)."]},
+{tab:2,sub:"V\u2090\u2096 > V\u2085\u2092",name:"Forward Conduction Mode: V\u2090\u2096 > V\u2085\u2092",on:true,m:"+",g:0,J:[F,X,F],cur:"on",dot:[172,60],big:true,
+ ia:"I\u2090\u2096 mengalir Anoda \u2192 Katoda",
+ pts:["Jika GATT dipanjar maju, ia tidak begitu saja menjadi konduktor.","Namun ketika tegangan yang diberikan sangat besar, melebihi batas <b>Break Over (V<sub>BO</sub>)</b>, GATT berubah menjadi konduktor.","Arus mengalir dari Anoda ke Katoda dan GATT berada dalam kondisi <b>ON</b>."],
+ warn:"Metode ini sangat tidak direkomendasikan karena berpotensi menimbulkan kerusakan permanen pada unit."},
+{tab:2,sub:"dV/dt terlalu tinggi",name:"Forward Conduction Mode: dV/dt terlalu tinggi",on:true,m:"+",g:0,J:[F,X,F],cur:"on",dot:[172,60],caps:true,
+ ia:"Arus transien C\u00B7dV/dt menambah arus bocor maju",
+ pts:["Saat forward blocking, terbentuk <b>kapasitor internal</b> ekuivalen dari anoda ke gate dan dari gate ke katoda.","Ketika tegangan berubah dengan cepat, <b>arus transien</b> mengalir karena variasi tegangan (dV/dt) dan kapasitansi internal.","Arus ini menambah arus bocor maju dan menyebabkan GATT menjadi <b>ON</b>."],
+ warn:"Pemicuan karena dV/dt bersifat tidak diinginkan, jadi laju kenaikan tegangan perlu dibatasi."},
+{tab:3,name:"Turn-off dibantu Gate (ciri GATT)",on:false,m:"+",g:-1,J:[F,R,F],cur:"off",dot:[230,146],rev:true,
+ ia:"I\u2090\u2096 turun di bawah I\u2095 \u2192 GATT OFF",
+ pts:["Pada SCR biasa, untuk mematikan diperlukan rangkaian tambahan yang mengondisikan arus supaya lebih kecil dari <b>Holding Current (I<sub>H</sub>)</b>.","Pada GATT, <b>Gate diberi panjar mundur</b>: arus gate mengalir keluar dan membantu menarik muatan dari lapisan P bagian dalam.","Arus anoda turun di bawah I<sub>H</sub> dan GATT kembali <b>OFF</b> (Forward Blocking), dengan bantuan gate sehingga lebih cepat."]}
+];
+const $=id=>document.getElementById(id);
+const tabs=[["Reverse Blocking",0],["Forward Blocking",1],["Forward Conduction",2],["Turn-off (GATT)",3]];
+let cur=0;
+function plates(a,b,pos,lo,x1,x2){ // pos '+' atas panjang
+  const L=pos==="+";
+  $(a).setAttribute("x1",L?x1[0]:x1[1]);$(a).setAttribute("x2",L?x2[0]:x2[1]);
+  $(b).setAttribute("x1",L?x1[1]:x1[0]);$(b).setAttribute("x2",L?x2[1]:x2[0]);
+}
+function flow(el,mode,rev){
+  el.style.opacity=mode==="none"?0:1;
+  el.classList.toggle("r",!!rev);
+  const w=mode==="on"?4:2;el.style.strokeWidth=w;
+  el.style.animationDuration=mode==="on"?".7s":"3s";
+  if(mode==="leak")el.style.opacity=.45;
+}
+function show(i){
+  const s=S[i];cur=i;
+  $("title").textContent=s.name;
+  $("pts").innerHTML=s.pts.map(p=>"<li>"+p+"</li>").join("");
+  const w=$("warn");w.hidden=!s.warn;w.textContent=s.warn||"";
+  const b=$("badge");b.textContent=s.on?"ON":"OFF";b.className="badge "+(s.on?"on":"off");
+  $("ia").textContent=s.ia;
+  // baterai utama
+  const top=s.m==="+";
+  plates("bm1","bm2",top?"+":"-",0,[385,392],[415,408]);
+  $("pm1").textContent=top?"+":"\u2212";$("pm2").textContent=top?"\u2212":"+";
+  // gate
+  const gb=$("gbat");gb.style.opacity=s.g===0?.2:1;
+  const gp=s.g>=0;
+  plates("bg1","bg2",gp?"+":"-",0,[85,92],[115,108]);
+  $("pg1").textContent=gp?"+":"\u2212";$("pg2").textContent=gp?"\u2212":"+";
+  $("gtxt").textContent=s.g===0?"Gate terbuka (tanpa pemicu)":s.g===1?"Gate dipanjar maju":"Gate dipanjar mundur";
+  // junction
+  [0,1,2].forEach(k=>{const t=$("j"+(k+1)),v=s.J[k];
+    t.textContent="J"+(k+1)+": "+v;
+    t.setAttribute("fill",v===F?"var(--on)":v===R?"var(--off)":"var(--blue)");});
+  $("caps").setAttribute("visibility",s.caps?"visible":"hidden");
+  // aliran
+  flow($("fm"),s.cur==="off"?"leak":s.cur,s.rev&&i===0);
+  if(s.cur==="off"){$("fm").style.opacity=.35;$("fm").style.strokeWidth=2}
+  if(s.g===0)flow($("fg"),"none");
+  else{flow($("fg"),"on",s.g===-1);}
+  $("fg").style.strokeWidth=3;
+  $("dot").style.transform="translate("+s.dot[0]+"px,"+s.dot[1]+"px)";
+  // tombol
+  [...document.querySelectorAll("#tabs button")].forEach(x=>x.setAttribute("aria-pressed",+x.dataset.t===s.tab));
+  const subs=S.map((x,k)=>[x,k]).filter(([x])=>x.tab===s.tab&&x.sub);
+  $("subs").innerHTML=subs.map(([x,k])=>`<button data-i="${k}" aria-pressed="${k===i}">${x.sub}</button>`).join("");
+  document.querySelectorAll("#subs button").forEach(x=>x.onclick=()=>show(+x.dataset.i));
+}
+$("tabs").innerHTML=tabs.map(([n,t])=>`<button data-t="${t}" aria-pressed="false">${n}</button>`).join("");
+document.querySelectorAll("#tabs button").forEach(x=>x.onclick=()=>show(S.findIndex(s=>s.tab===+x.dataset.t)));
+show(0);
+</script>
+</body>
+</html>
